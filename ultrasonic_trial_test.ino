@@ -21,8 +21,12 @@ int greenPin = 2;
 int safeState;
 int riskyState;
 int dangerState;
-String lcdStatement[4] = {"Crash Distance", "Risky Distance", "Safe Distance ", "Distance: "};
-String line0[] = {"                "};
+//ultrasonic output
+long duration, distance;//int value
+float distance2;//decimals value
+//statement display LCD
+String lcdStatement[6] = {"Crash Distance  ", "Risky Distance  ", "Safe Distance   ", "Distance: ", " cm", "  "};
+
 
 LiquidCrystal lcd(lcdRS, lcdE, lcdD4, lcdD5, lcdD6, lcdD7);
 void setup() {
@@ -43,20 +47,19 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  distance_display();
-  delay(80);
-  
+  final_result();
+  delay(200);
+
 }
-void distance_display()
+// main function
+void final_result()
 {
-  long duration, distance;
-  float distance2;
-  digitalWrite(trigPin, LOW);
   noTone(buzzerPin);
   digitalWrite(redPin, dangerState);
   digitalWrite(greenPin, safeState);
   digitalWrite(y1Pin, riskyState);
   digitalWrite(y2Pin, riskyState);
+  digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
@@ -71,65 +74,66 @@ void distance_display()
     safeState = 1;
     riskyState = 0;
     dangerState = 0;
-    digitalWrite(redPin, dangerState);
-    digitalWrite(greenPin, safeState);
-    digitalWrite(y1Pin, riskyState);
-    digitalWrite(y2Pin, riskyState);
-    Serial.print(lcdStatement[3]);
-    Serial.print(distance2);
-    Serial.print(" cm");
-    Serial.println(line0[0]);
-    lcd.setCursor(0,0);
-    lcd.print(lcdStatement[3]);
-    lcd.print(distance2);
-    lcd.print("  ");
-    lcd.setCursor(0,1);
-    lcd.print(lcdStatement[2]);
-    
+    displayer(safeState, riskyState, dangerState, distance2);
   }
   else if (distance > 25) {
     safeState = 0;
     riskyState = 1;
     dangerState = 0;
-    digitalWrite(greenPin, safeState);
-    digitalWrite(redPin, dangerState);
-    digitalWrite(y1Pin, riskyState);
-    digitalWrite(y2Pin, riskyState);
-    Serial.print(lcdStatement[3]);
-    Serial.print(distance2);
-    Serial.print(" cm");
-    Serial.println(line0[0]);
-    lcd.setCursor(0,0);
-    lcd.print(lcdStatement[3]);
-    lcd.print(distance2);
-    lcd.print("  ");
-    lcd.setCursor(0,1);
-    lcd.print(lcdStatement[1]);
-    
-
+    displayer(safeState, riskyState, dangerState, distance2);
   }
   else
   {
     safeState = 0;
     riskyState = 0;
     dangerState = 1;
-    digitalWrite(greenPin, safeState);
-    Serial.print(lcdStatement[3]);
-    Serial.print(distance2);
-    Serial.print(" cm");
-    Serial.println(line0[0]);
-    tone(buzzerPin, 500);
-    digitalWrite(redPin, dangerState);
-    digitalWrite(y1Pin, riskyState);
-    digitalWrite(y2Pin, riskyState);
-    lcd.setCursor(0,0);
-    lcd.print(lcdStatement[3]);
-    lcd.print(distance2);
-    lcd.print("  ");
-    lcd.setCursor(0,1);
-    lcd.print(lcdStatement[0]);
-    
-
-
+    displayer(safeState, riskyState, dangerState, distance2);
   }
+}// function for simple version of both serial and lcd output display logic
+void displayer(int safe, int risky, int danger, float ultradis)
+{
+  ultradis = ultradis - 1;
+  if (safe == 1 && risky == 0 && danger == 0 ) {
+    Serial.print(lcdStatement[3]);
+    Serial.print(ultradis);
+    Serial.print(lcdStatement[4]);
+    Serial.println(lcdStatement[5]);
+    lcd.setCursor(0, 0);
+    lcd.print(lcdStatement[3]);
+    lcd.print(ultradis);
+    lcd.print(lcdStatement[5]);
+    lcd.setCursor(0, 1);
+    lcd.print(lcdStatement[2]);
+  }
+  else if (safe == 0 && risky == 1 && danger == 0) {
+    Serial.print(lcdStatement[3]);
+    Serial.print(ultradis);
+    Serial.print(lcdStatement[4]);
+    Serial.println(lcdStatement[5]);
+    lcd.setCursor(0, 0);
+    lcd.print(lcdStatement[3]);
+    lcd.print(ultradis);
+    lcd.print(lcdStatement[5]);
+    lcd.setCursor(0, 1);
+    lcd.print(lcdStatement[1]);
+  }
+  else if (safe == 0 && risky == 0 && danger == 1)
+  {
+    Serial.print(lcdStatement[3]);
+    Serial.print(ultradis);
+    Serial.print(lcdStatement[4]);
+    Serial.println(lcdStatement[5]);
+    lcd.setCursor(0, 0);
+    lcd.print(lcdStatement[3]);
+    lcd.print(ultradis);
+    lcd.print(lcdStatement[5]);
+    lcd.setCursor(0, 1);
+    lcd.print(lcdStatement[0]);
+    tone(buzzerPin, 100);
+  }
+  digitalWrite(redPin, danger);
+  digitalWrite(greenPin, safe);
+  digitalWrite(y1Pin, 0);
+  digitalWrite(y2Pin, risky);
+
 }
